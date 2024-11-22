@@ -10,8 +10,6 @@ export class watermelonSync {
     this.tables = tables;
   }
 
-  
-
   async syncPush(clientChange: Changes): Promise<void> {
     try {
       const serverChanges = await this.prisma.$transaction(async (tx) => {
@@ -19,91 +17,89 @@ export class watermelonSync {
         // Return something useful if needed (for example, a summary of changes made)
         return { success: true };
       });
-  
+
       console.log('Server changes:', serverChanges); // Log or use serverChanges if necessary
     } catch (error) {
       console.error('Error syncing changes:', error); // Log the error for debugging
     }
   }
 
-    private async pushChanges(clientChange: Changes, tx: any): Promise<void> {
-      const operations: Promise<any>[] = [];
-  
-      for (const [tableName, tableChanges] of Object.entries(clientChange)) {
-        const tableSchema = this.tables.find((table) => table.name === tableName);
-        let model: any;
-        if (tableSchema) {
-          model = tx[tableSchema.name.trim().slice(0, -1)]
-        } else {
-          console.error(`Table schema not found for table name: ${tableName}`);
-          continue;
-        }
-  
+  private async pushChanges(clientChange: Changes, tx: any): Promise<void> {
+    const operations: Promise<any>[] = [];
+
+    for (const [tableName, tableChanges] of Object.entries(clientChange)) {
+      const tableSchema = this.tables.find((table) => table.name === tableName);
+      let model: any;
+      if (tableSchema) {
+        model = tx[tableSchema.name.trim().slice(0, -1)];
+      } else {
+        console.error(`Table schema not found for table name: ${tableName}`);
+        continue;
+      }
+
       // Handle created records
-    if (Array.isArray(tableChanges.created)) {
-      operations.push(
-        ...tableChanges.created.map((record) =>
-          model.create({
-            data: record,
-          })
-        )
-      );
-    } else {
-      console.error(`Created records not found for table name: ${tableName}`);
-    }
-    
-        
-      }
-  
-      //   // Handle updated records
-      //   operations.push(
-      //     ...tableChanges.updated.map(async (record) => {
-      //       try {
-      //         const existing = await model.findUnique({
-      //           where: { id: record.id }
-      //         });
-  
-      //         if (!existing) {
-      //           console.error(`Record with id ${record.id} not found in table ${tableName}`);
-      //           return;
-      //         }
-  
-      //         return model.update({
-      //           where: { id: record.id },
-      //           data: {
-      //             ...record
-      //           }
-      //         });
-      //       } catch (error) {
-      //         console.error(`Error updating record in table ${tableName}:`, error);
-      //       }
-      //     })
-      //   );
-  
-      //   // Handle deleted records
-      //   operations.push(
-      //     ...tableChanges.deleted.map((id) =>
-      //       model.update({
-      //         where: { id },
-      //         data: {
-      //           deleted_at: new Date(),
-      //           updated_at: new Date()
-      //         }
-      //       }).catch((error:Error) => {
-      //         console.error(`Error deleting record in table ${tableName}:`, error);
-      //       })
-      //     )
-      //   );
-      // }
-  
-      // Execute all operations concurrently within the transaction
-      try {
-        await Promise.all(operations);
-        console.log('All operations executed successfully.');
-      } catch (error) {
-        console.error('Error executing operations:', error);
+      if (Array.isArray(tableChanges.created)) {
+        operations.push(
+          ...tableChanges.created.map((record) =>
+            model.create({
+              data: record
+            })
+          )
+        );
+      } else {
+        console.error(`Created records not found for table name: ${tableName}`);
       }
     }
+
+    //   // Handle updated records
+    //   operations.push(
+    //     ...tableChanges.updated.map(async (record) => {
+    //       try {
+    //         const existing = await model.findUnique({
+    //           where: { id: record.id }
+    //         });
+
+    //         if (!existing) {
+    //           console.error(`Record with id ${record.id} not found in table ${tableName}`);
+    //           return;
+    //         }
+
+    //         return model.update({
+    //           where: { id: record.id },
+    //           data: {
+    //             ...record
+    //           }
+    //         });
+    //       } catch (error) {
+    //         console.error(`Error updating record in table ${tableName}:`, error);
+    //       }
+    //     })
+    //   );
+
+    //   // Handle deleted records
+    //   operations.push(
+    //     ...tableChanges.deleted.map((id) =>
+    //       model.update({
+    //         where: { id },
+    //         data: {
+    //           deleted_at: new Date(),
+    //           updated_at: new Date()
+    //         }
+    //       }).catch((error:Error) => {
+    //         console.error(`Error deleting record in table ${tableName}:`, error);
+    //       })
+    //     )
+    //   );
+    // }
+
+    // Execute all operations concurrently within the transaction
+    try {
+      await Promise.all(operations);
+      console.log('All operations executed successfully.');
+    } catch (error) {
+      console.error('Error executing operations:', error);
+    }
+  }
 
   private sanitizeRecord(record: SyncableRecord): SyncableRecord_sanitizeRecord {
     const {

@@ -6,5 +6,3 @@ const router = express.Router();
 router.use('/sync', syncRouter);
 
 export default router;
-
-
