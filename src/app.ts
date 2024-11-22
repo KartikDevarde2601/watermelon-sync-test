@@ -8,10 +8,9 @@ import config from './config/config';
 import morgan from './config/morgan';
 import xss from './middlewares/xss';
 import { jwtStrategy } from './config/passport';
-import { authLimiter } from './middlewares/rateLimiter';
-import routes from './routes/v1';
 import { errorConverter, errorHandler } from './middlewares/error';
 import ApiError from './utils/ApiError';
+import routes from './sync';
 
 const app = express();
 
@@ -43,13 +42,8 @@ app.options('*', cors());
 app.use(passport.initialize());
 passport.use('jwt', jwtStrategy);
 
-// limit repeated failed requests to auth endpoints
-if (config.env === 'production') {
-  app.use('/v1/auth', authLimiter);
-}
-
-// v1 api routes
 app.use('/v1', routes);
+
 
 // send back a 404 error for any unknown api request
 app.use((req, res, next) => {

@@ -44,3 +44,63 @@ enum TokenType {
   RESET_PASSWORD
   VERIFY_EMAIL
 }
+
+model Patient {
+  pid                 String    @id
+  name                String
+  contact_information String
+  birthday            DateTime
+  gender              String
+  visits              Visit[]
+  server_createdAt    DateTime  @default(now())
+  server_updatedAt    DateTime  @updatedAt
+  server_deletedAt    DateTime?
+
+  @@index([server_updatedAt])
+  @@index([server_deletedAt])
+}
+
+model Visit {
+  vid                   String    @id
+  pid                   String
+  is_clinical_collected Boolean?
+  is_data_collected     Boolean?
+  visit_notes           String?
+  clinics               Clinic?
+  patient               Patient   @relation(fields: [pid], references: [pid])
+  server_createdAt      DateTime  @default(now())
+  server_updatedAt      DateTime  @updatedAt
+  server_deletedAt      DateTime?
+
+  @@index([server_updatedAt])
+  @@index([server_deletedAt])
+}
+
+model Clinic {
+  cid                      String    @id
+  vid                      String    @unique
+  blood_group              String
+  antigen_status           String
+  systolic                 Int
+  diastolic                Int
+  temperature              Int
+  smoking_type             String
+  over_all_year_of_smoking Int
+  daily_consumption        Int
+  smoking_index            Int
+  alcohol_free_days        Int
+  alcohol_type             Int
+  alcohol_consumption      Int
+  homoglobin               Int
+  recent_health_issue      String
+  hereditary_history       String
+  height                   Int
+  weight                   Int
+  visit                    Visit     @relation(fields: [vid], references: [vid])
+  server_createdAt         DateTime  @default(now())
+  server_updatedAt         DateTime  @updatedAt
+  server_deletedAt         DateTime?
+
+  @@index([server_updatedAt])
+  @@index([server_deletedAt])
+}
